@@ -136,10 +136,9 @@ WT.combined <- RunUMAP(WT.combined, dims = 1:50)
 St.combined <- RunUMAP(St.combined, dims = 1:50)
 Us.combined <- RunUMAP(Us.combined, dims = 1:50)
 
-DimPlot(WT.combined, reduction = "umap")
-DimPlot(St.combined, reduction = "umap")
-DimPlot(Us.combined, reduction = "umap")
-
+DimPlot(WT.combined, reduction = "umap", label = TRUE)
+DimPlot(St.combined, reduction = "umap", label = TRUE)
+DimPlot(Us.combined, reduction = "umap", label = TRUE)
 
 
 #differential gene expression
@@ -147,6 +146,22 @@ WT.cluster.markers <- FindAllMarkers(WT.combined)
 St.cluster.markers <- FindAllMarkers(St.combined)
 Us.cluster.markers <- FindAllMarkers(Us.combined)
 
+
+WT.cluster.narrowed <- WT.cluster.markers %>%
+                          group_by(cluster) %>%
+                          slice_max(n = 10, order_by = avg_log2FC)
+
+St.cluster.narrowed <- St.cluster.markers %>%
+                          group_by(cluster) %>%
+                          slice_max(n = 10, order_by = avg_log2FC)
+
+Us.cluster.narrowed <- Us.cluster.markers %>%
+                          group_by(cluster) %>%
+                          slice_max(n=10, order_by = avg_log2FC)
+
+WT.genes <-  WT.cluster.narrowed[ , 7]
+
+head(WT.genes, 10)
 
 # #regress out cell cycle
 # 
