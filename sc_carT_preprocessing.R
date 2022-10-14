@@ -33,17 +33,17 @@ Ustim.3 <- Read10X_h5("C:/Users/Patron/Documents/MyDocuments/R/CAR-T/CAR-T-subpo
 
 
 
-WT1 <- CreateSeuratObject(counts = WTsample.1, project = "WT T-Cells")
-WT2 <- CreateSeuratObject(counts = WTsample.2, project = "WT T-cells")
-WT3 <- CreateSeuratObject(counts = WTsample.3, project = "WT T-cells")
+WT1 <- CreateSeuratObject(counts = WTsample.1, assay = "RNA", project = "WT T-cells")
+WT2 <- CreateSeuratObject(counts = WTsample.2, assay = "RNA", project = "WT T-cells")
+WT3 <- CreateSeuratObject(counts = WTsample.3, assay = "RNA", project = "WT T-cells")
 
-St1 <- CreateSeuratObject(counts = Stim.1, project = "Stimulated T-cells")
-St2 <- CreateSeuratObject(counts = Stim.2, project = "Stimulated T-cells")
-St3 <- CreateSeuratObject(counts = Stim.3, project = "Stimulated T-cells")
+St1 <- CreateSeuratObject(counts = Stim.1, assay = "RNA", project = "Stimulated T-cells")
+St2 <- CreateSeuratObject(counts = Stim.2, assay = "RNA", project = "Stimulated T-cells")
+St3 <- CreateSeuratObject(counts = Stim.3, assay = "RNA", project = "Stimulated T-cells")
 
-Us1 <- CreateSeuratObject(counts = Ustim.1, project = "Unstimulated T-cells")
-Us2 <- CreateSeuratObject(counts = Ustim.2, project = "Unstimulated T-cells")
-Us3 <- CreateSeuratObject(counts = Ustim.3, project = "Unstimulated T-cells")
+Us1 <- CreateSeuratObject(counts = Ustim.1, assay = "RNA", project = "Unstimulated T-cells")
+Us2 <- CreateSeuratObject(counts = Ustim.2, assay = "RNA", project = "Unstimulated T-cells")
+Us3 <- CreateSeuratObject(counts = Ustim.3, assay = "RNA", project = "Unstimulated T-cells")
 
 WT.combined <- merge(WT1, y = c(WT2, WT3), add.cell.ids = c("Donor1", "Donor2", "Donor3"), project = "WT T-cells")
 St.combined <- merge(St1, y = c(St2, St3), add.cell.ids = c("Donor1", "Donor2", "Donor3"), project = "Stimulated T-cells")
@@ -66,10 +66,11 @@ VlnPlot(Us.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), n
 #at least 400 genes for leuka, 1000 for product
 #less than 8% mito
 #more than 10000 and 30000 UMIs for leuka and product
+#This makes no sense, this cuts out most of the cells
 
-WT.combined <- subset(WT.combined, subset = nFeature_RNA > 400 & nCount_RNA > 10000 & percent.mt < 8)
-St.combined <- subset(St.combined, subset = nFeature_RNA > 1000 & nCount_RNA > 30000 & percent.mt < 8)
-Us.combined <- subset(Us.combined, subset = nFeature_RNA > 1000 & nCount_RNA > 30000 & percent.mt < 8)
+WT.combined <- subset(WT.combined, subset = nFeature_RNA > 400 & nCount_RNA < 10000 & percent.mt < 8)
+St.combined <- subset(St.combined, subset = nFeature_RNA > 1000 & nCount_RNA < 30000 & percent.mt < 8)
+Us.combined <- subset(Us.combined, subset = nFeature_RNA > 1000 & nCount_RNA < 30000 & percent.mt < 8)
 
 
 #log normalizing
@@ -112,9 +113,7 @@ Us.combined <- ScaleData(Us.combined, features = all.genes.us)
 #run PCA
 WT.combined <- RunPCA(WT.combined)
 St.combined <- RunPCA(St.combined)
-
-#adjusted npcs because dimensions of these data are 36, unsure why
-Us.combined <- RunPCA(Us.combined, npcs = 35)
+Us.combined <- RunPCA(Us.combined)
 
 
 ElbowPlot(WT.combined)
@@ -127,21 +126,26 @@ WT.combined <- FindNeighbors(WT.combined, dims = 1:50)
 WT.combined <- FindClusters(WT.combined, resolution = 0.5)
 
 St.combined <- FindNeighbors(St.combined, dims = 1:50)
-WT.combined <- FindClusters(WT.combined, resolution = 0.5)
+St.combined <- FindClusters(St.combined, resolution = 0.5)
 
-Us.combined <- FindNeighbors(Us.combined, dims = 1:35)
+Us.combined <- FindNeighbors(Us.combined, dims = 1:50)
 Us.combined <- FindClusters(Us.combined, resolution = 0.5)
 
 #UMAP
 WT.combined <- RunUMAP(WT.combined, dims = 1:50)
 St.combined <- RunUMAP(St.combined, dims = 1:50)
-Us.combined <- RunUMAP(Us.combined, dims = 1:35)
+Us.combined <- RunUMAP(Us.combined, dims = 1:50)
 
 DimPlot(WT.combined, reduction = "umap")
 DimPlot(St.combined, reduction = "umap")
 DimPlot(Us.combined, reduction = "umap")
 
 
+
+#differential gene expression
+WT.cluster.markers <- FindAllMarkers(WT.combined)
+St.cluster.markers <- FindAllMarkers(St.combined)
+Us.cluster.markers <- FindAllMarkers(Us.combined)
 
 
 # #regress out cell cycle
