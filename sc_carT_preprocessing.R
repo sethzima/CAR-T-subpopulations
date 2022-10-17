@@ -65,8 +65,7 @@ VlnPlot(Us.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), n
 #QC metrics
 #at least 400 genes for leuka, 1000 for product
 #less than 8% mito
-#more than 10000 and 30000 UMIs for leuka and product
-#This makes no sense, this cuts out most of the cells
+#fileter out more than 10000 and 30000
 
 WT.combined <- subset(WT.combined, subset = nFeature_RNA > 400 & nCount_RNA < 10000 & percent.mt < 8)
 St.combined <- subset(St.combined, subset = nFeature_RNA > 1000 & nCount_RNA < 30000 & percent.mt < 8)
@@ -149,36 +148,73 @@ Us.cluster.markers <- FindAllMarkers(Us.combined)
 
 WT.cluster.narrowed <- WT.cluster.markers %>%
                           group_by(cluster) %>%
-                          slice_max(n = 10, order_by = avg_log2FC)
+                          slice_max(n = 20, order_by = avg_log2FC)
 
 St.cluster.narrowed <- St.cluster.markers %>%
                           group_by(cluster) %>%
-                          slice_max(n = 10, order_by = avg_log2FC)
+                          slice_max(n = 20, order_by = avg_log2FC)
 
 Us.cluster.narrowed <- Us.cluster.markers %>%
                           group_by(cluster) %>%
-                          slice_max(n=10, order_by = avg_log2FC)
+                          slice_max(n=20, order_by = avg_log2FC)
 
 WT.genes <-  WT.cluster.narrowed[ , 7]
 
-head(WT.genes, 10)
+wt.cluster0 <- WT.genes[1:20, ]
+wt.cluster1 <- WT.genes[21:40, ]
+wt.cluster2 <- WT.genes[41:60, ]
+wt.cluster3 <- WT.genes[61:80, ]
+wt.cluster4 <- WT.genes[81:100, ]
+wt.cluster5 <- WT.genes[101:120, ]
+wt.cluster6 <- WT.genes[121:140, ]
+wt.cluster7 <- WT.genes[141:160, ]
+wt.cluster8 <- WT.genes[161:180, ]
+wt.cluster9 <- WT.genes[181:200, ]
+wt.cluster10 <- WT.genes[201:220, ]
+wt.cluster11 <- WT.genes[221:240, ]
 
-# #regress out cell cycle
-# 
-# #load in cell cycle genes
-# s.genes <- cc.genes$s.genes
-# g2m.genes <- cc.genes$g2m.genes
-# 
-# #initialization
-# wildType.combined <- NormalizeData(wildType.combined)
-# wildType.combined <- FindVariableFeatures(wildType.combined)
-# wildType.combined <- ScaleData(wildType.combined, features = rownames(wildType.combined))
-# 
-# #cell cycle scoring
-# wildTYpe.combined <- CellCycleScoring(wildType.combined, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
-# head(wildTYpe.combined[[]])
-# 
-# RidgePlot(wildType.combined, features = c("PCNA", "TOP2A", "MCM6", "MKI67"), ncol = 2)
-# 
-# wildType.combined <- RunPCA(wildType.combined, features = c(s.genes, g2m.genes))
-# DimPlot(wildType.combined)
+
+St.genes <- St.cluster.narrowed[ , 7]
+
+St.cluster0 <- St.genes[1:20, ]
+St.cluster1 <- St.genes[21:40, ]
+St.cluster2 <- St.genes[41:60, ]
+St.cluster3 <- St.genes[61:80, ]
+St.cluster4 <- St.genes[81:100, ]
+St.cluster5 <- St.genes[101:120, ]
+St.cluster6 <- St.genes[121:140, ]
+St.cluster7 <- St.genes[141:160, ]
+St.cluster8 <- St.genes[161:180, ]
+St.cluster9 <- St.genes[181:200, ]
+St.cluster10 <- St.genes[201:220, ]
+St.cluster11 <- St.genes[221:240, ]
+St.cluster12 <- St.genes[241:260, ]
+
+
+Us.genes <- Us.cluster.narrowed[ , 7]
+Us.cluster0 <- Us.genes[1:20, ]
+Us.cluster1 <- Us.genes[21:40, ]
+Us.cluster2 <- Us.genes[41:60, ]
+Us.cluster3 <- Us.genes[61:80, ]
+Us.cluster4 <- Us.genes[81:100, ]
+Us.cluster5 <- Us.genes[101:120, ]
+Us.cluster6 <- Us.genes[121:140, ]
+Us.cluster7 <- Us.genes[141:160, ]
+Us.cluster8 <- Us.genes[161:180, ]
+Us.cluster9 <- Us.genes[181:200, ]
+Us.cluster10 <- Us.genes[201:220, ]
+Us.cluster11 <- Us.genes[221:240, ]
+
+
+#in order to do more, I'd like to have the clusters annotated with their cell types
+
+#cluster annotation
+wt.new.cluster.ids <- c("CD4+ T cell", "CD4+ naive/CD8+ memeory effector T", "CD19+ B Cells", "CD56+ NK cells", 
+                        "CD4+ Naive T cells", "CD8+ T cells", "CD56+ NK cells", "CD19+ B cells", "CD33+ Myeloid",
+                        "T lymphocyte", "CD56+ NK cells", "Myeloid Dendritic Cell")
+names(wt.new.cluster.ids) <- levels(WT.combined)
+WT.combined <- RenameIdents(WT.combined, wt.new.cluster.ids)
+DimPlot(WT.combined, reduction = "umap", label=TRUE)
+
+
+
