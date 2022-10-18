@@ -78,11 +78,12 @@ st.data <- GetAssayData(St.combined, slot = "counts")
 us.data <- GetAssayData(Us.combined, slot = "counts")
 
 
-#quality control
-#wt
 cellrouter.wt <- CreateCellRouter(wt.data, assay.type = "RNA", min.genes = 200, min.cells = 3, is.expr = 0)
 cellrouter.st <- CreateCellRouter(st.data, assay.type = "RNA", min.genes = 200, min.cells = 3, is.expr = 0)
 cellrouter.us <- CreateCellRouter(us.data, assay.type = "RNA", min.genes = 200, min.cells = 3, is.expr = 0)
+
+#quality control
+#wt
 mito.genes.wt <- grep(pattern = "^MT-", x = rownames(x = cellrouter.wt@assays$RNA@ndata), value = TRUE)
 percent.mito.wt <- Matrix::colSums(cellrouter.wt@assays$RNA@ndata[mito.genes.wt, ]) / Matrix::colSums(cellrouter.wt@assays$RNA@ndata)
 ribo.genes.wt <- grep(pattern = "^RP[SL]", x = rownames(x = cellrouter.wt@assays$RNA@ndata), value = TRUE)
@@ -144,4 +145,70 @@ cellrouter.st <- filterCells(cellrouter.st, assay.type = "RNA", variables = c("n
 
 cellrouter.us <- filterCells(cellrouter.us, assay.type = "RNA", variables = c("nGene", "percent.mito.us"),
                                 thresholds.low = c(1000, -Inf), thresholds.high = c(30000, 0.08))
+
+
+
+#normalizing
+cellrouter.wt <- Normalize(cellrouter.wt)
+cellrouter.st <- Normalize(cellrouter.st)
+cellrouter.us <- Normalize(cellrouter.us)
+
+#highly variable genes
+var.genes.wt <- FindVariableGenes(cellrouter.wt, assay.type = "RNA", method = "vst", loess.span = 0.3, pvalue = 0.05)
+cellrouter.wt@var.genes <- rownames(var.genes.wt[1:2000, ])
+
+var.genes.st <- FindVariableGenes(cellrouter.st, assay.type = "RNA", method = "vst", loess.span = 0.3, pvalue = 0.05)
+cellrouter.st@var.genes <- rownames(var.genes.st[1:2000, ])
+
+var.genes.us <- FindVariableGenes(cellrouter.us, assay.type = "RNA", method = "vst", loess.span = 0.3, pvalue = 0.05)
+cellrouter.us@var.genes <- rownames(var.genes.us[1:2000, ])
+
+
+#scaling the data
+cellrouter.wt <- scaleData(cellrouter.wt, genes.use = cellrouter.wt@var.genes)
+cellrouter.st <- scaleData(cellrouter.st, genes.use = cellrouter.st@var.genes)
+cellrouter.us <- scaleData(cellrouter.us, genes.use = cellrouter.us@var.genes)
+
+
+#dimension reduction
+#wt
+cellrouter.wt <- computePCA(cellrouter.wt, assay.type = "RNA", seed = 42, num.pcs = 50, genes.use = cellrouter.wt@var.genes) 
+umap.done <- uwot::umap(cellrouter.wt@pca$cell.embeddings[, 1:15], spread = 1, min_dist = 0.3, n_neighbors = 30, metric = "cosine")
+rownames(umap.done) <- rownames(cellrouter.wt@pca$cell.embeddings)
+colnames(umap.done) <- c("UMAP1", "UMAP2")
+cellrouter.wt <- customSpace(object = cellrouter.wt, matrix = umap.done)
+
+
+
+cellrouter.wt <- findClusters(cellrouter.wt, k = 15, num.pcs = 15, nn.type = "snn")
+plotReducedDimension(cellrouter.wt, reduction.type = "custom", annotation = "population", annotation.color = "colors",
+                     showlabels = T, dotsize = 0.01, labelsize = 5, convex = FALSE)
+
+
+#st
+cellrouter.st <- computePCA(cellrouter.st, assay.type = "RNA", seed = 42, num.pcs = 50, genes.use = cellrouter.st@var.genes) 
+umap.done <- uwot::umap(cellrouter.st@pca$cell.embeddings[, 1:15], spread = 1, min_dist = 0.3, n_neighbors = 30, metric = "cosine")
+rownames(umap.done) <- rownames(cellrouter.st@pca$cell.embeddings)
+colnames(umap.done) <- c("UMAP1", "UMAP2")
+cellrouter.st <- customSpace(object = cellrouter.st, matrix = umap.done)
+
+
+
+cellrouter.st <- findClusters(cellrouter.st, k = 15, num.pcs = 15, nn.type = "snn")
+plotReducedDimension(cellrouter.st, reduction.type = "custom", annotation = "population", annotation.color = "colors",
+                     showlabels = T, dotsize = 0.01, labelsize = 5, convex = FALSE)
+
+
+#us
+cellrouter.us <- computePCA(cellrouter.us, assay.type = "RNA", seed = 42, num.pcs = 50, genes.use = cellrouter.us@var.genes) 
+umap.done <- uwot::umap(cellrouter.us@pca$cell.embeddings[, 1:15], spread = 1, min_dist = 0.3, n_neighbors = 30, metric = "cosine")
+rownames(umap.done) <- rownames(cellrouter.us@pca$cell.embeddings)
+colnames(umap.done) <- c("UMAP1", "UMAP2")
+cellrouter.us <- customSpace(object = cellrouter.us, matrix = umap.done)
+
+
+
+cellrouter.us <- findClusters(cellrouter.us, k = 15, num.pcs = 15, nn.type = "snn")
+plotReducedDimension(cellrouter.us, reduction.type = "custom", annotation = "population", annotation.color = "colors",
+                     showlabels = T, dotsize = 0.01, labelsize = 5, convex = FALSE)
 
