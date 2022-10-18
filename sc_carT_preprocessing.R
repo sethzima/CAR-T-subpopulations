@@ -16,7 +16,7 @@ library(hdf5r)
 #data = "C:/Users/Patron/Documents/MyDocuments/R/CAR-T/CAR-T-subpopulations/GSE145809_RAW/WT/"
 
 #read in the data
-
+set.seed(42)
 
 WTsample.1 <- Read10X_h5("C:/Users/Patron/Documents/MyDocuments/R/CAR-T/CAR-T-subpopulations/GSE145809_RAW/WT/GSM4333345_RBG9802_filtered_gene_bc_matrices_h5.h5")
 WTsample.2 <- Read10X_h5("C:/Users/Patron/Documents/MyDocuments/R/CAR-T/CAR-T-subpopulations/GSE145809_RAW/WT/GSM4333346_RBG13746_filtered_gene_bc_matrices_h5.h5")
@@ -145,6 +145,9 @@ WT.cluster.markers <- FindAllMarkers(WT.combined)
 St.cluster.markers <- FindAllMarkers(St.combined)
 Us.cluster.markers <- FindAllMarkers(Us.combined)
 
+write.csv(WT.cluster.markers, file="wt_clusters.csv", row.names=F)
+write.csv(St.cluster.markers, file="st_clusters.csv", row.names=F)
+write.csv(Us.cluster.markers, file="us_clusters.csv", row.names=F)
 
 WT.cluster.narrowed <- WT.cluster.markers %>%
                           group_by(cluster) %>%
@@ -217,4 +220,15 @@ WT.combined <- RenameIdents(WT.combined, wt.new.cluster.ids)
 DimPlot(WT.combined, reduction = "umap", label=TRUE)
 
 
+st.new.cluster.ids <- c("CD8+ T cells", "CD4+ central memory T cells", "CD8+ Effectory memory T cells", "Dendritic cells",
+                        "NK cells", "CD8+ Effectory memory T cells", "Proliferating NK/T cells", "CD4+ Central memory T cells",
+                        "CD4+ central memory T cells", "B lymphoblasts", "CD56+ NK cells", "Dendritic cells", "CD4+ T cells")
+names(st.new.cluster.ids) <- levels(St.combined)
+St.combined <- RenameIdents(St.combined, st.new.cluster.ids)
+DimPlot(St.combined, reduction = "umap", label=TRUE)
 
+us.new.cluster.ids <- c("CD4+ memory T", "Naive CD4+ T", "B lymphocytes", "CD56+ NK", "CD8+ T", "Dendritic",
+                       "Proliferating NK/T", "Naive regulatory T", "CD4+ proliferating T", "Dendritic", "Proliferating macrophage", "CD4+ T")
+names(us.new.cluster.ids) <- levels(Us.combined)
+Us.combined <- RenameIdents(Us.combined, us.new.cluster.ids)
+DimPlot(Us.combined, reduction = "umap", label=TRUE)
