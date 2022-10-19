@@ -1,11 +1,11 @@
 install.packages("devtools")
-library("devtools")
+library(devtools)
 devtools::install_github("edroaldo/fusca")
-library("dplyr")
-library("fusca")
-library("igraph")
-library("scales")
-library("ggplot2")
+library(dplyr)
+library(fusca)
+library(igraph)
+library(scales)
+library(ggplot2)
 library(Seurat)
 library(patchwork)
 library(dplyr)
@@ -183,3 +183,97 @@ markers.us <- findSignatures(cellrouter.us, assay.type = "RNA", column = "popula
 write.csv(markers.wt, file="wt_clusters_fusca.csv", row.names=F)
 write.csv(markers.st, file="st_clusters_fusca.csv", row.names=F)
 write.csv(markers.us, file="us_clusters_fusca.csv", row.names=F)
+
+
+
+#cluster annotations
+#WT
+tmp <- recode(as.character(cellrouter.wt@assays$RNA@sampTab$population), 
+              "1"="CD4+ T cell", 
+              "2"="CD4+ T cell",
+              "3"="Dendritic cell",
+              "4"="CD33+ Myeloid",
+              "5"="Macrophage",
+              "6"="CD14+ monocyte",
+              "7"="721 B Lymphocyte",
+              "8"="CD8+ T cell",
+              "9"="721 B Lymphoctye",
+              "10"="CD19+ B cell",
+              "11"="Double negative T",
+              "12"="Intermediate B cells",
+              "13"="CD56+ NK cells"
+              )
+names(tmp) <- rownames(cellrouter.wt@assays$RNA@sampTab)
+
+df <- data.frame(cluster = cellrouter.wt@assays$RNA@sampTab$population, celltype = tmp)
+rownames(df) <- rownames(cellrouter.wt@assays$RNA@sampTab)
+
+cellrouter.wt <- addInfo(cellrouter.wt, assay.type = "RNA", sample.name = sample_names[[1]],
+                      metadata = df, colname = "celltype",
+                      metadata.column = "celltype")
+
+plotReducedDimension(cellrouter.wt, assay.type = 'RNA', 
+                     reduction.type = 'umap', annotation="celltype", annotation.color = 'celltype_color',
+                     dotsize=1, showlabels = TRUE, labelsize=5, convex=FALSE)
+
+
+
+#calculate mean expression of ligands and receptors per cluster
+#wt
+lr_network = readRDS(url("https://zenodo.org/record/3260758/files/lr_network.rds"))# from NicheNet
+head(lr_network)
+
+pairs <- lr_network
+pairs$Pair.Name <- paste(pairs$from, pairs$to, sep = "_")
+
+ligands <- unique(lr_network$from)
+ligands <- intersect(ligands, rownames(cellrouter.wt@assays$RNA@ndata))
+
+receptors <- unique(lr_network$to)
+receptors <- intersect(receptors, rownames(cellrouter.wt@assays$RNA@ndata))
+
+ligands.receptors <- unique(c(ligands, receptors))
+
+mean.expr <- computeValue(cellrouter.wt, assay.type = "RNA", 
+                          genelist = ligands.receptors, "celltype", fun = "mean"); gc();
+
+interactions <- population.pairing(mean.expr = mean.expr, pairs = pairs, ligands = ligands, receptors = receptors, threshold = 0.25)
+
+interactions <- calculateObservedMean(mean.expr = mean.expr, interactions = interactions)
+head(interactions)
+
+markers <- findSignatures(cellrouter.wt, assay.type = "RNA", 
+                          column = "celltype", pos.only = TRUE, fc.threshold = 0.2, nCores = 10)
+
+
+#calculate null distribution of intracluster gene expression means
+genelist <- unique(c(interactions$ligand, interactions$receptor))
+
+p <- clusterPermutation(cellrouter.wt, assay.type = "RNA", 
+                        genelist = genelist, interactions = interactions, cluster.label = "celltype", nPerm = 1000, nCores = 10)
+
+interactions.p <- calculatePvalue(p, nPerm = 1000, interactions2 = interactions)
+
+tmp <- interactions.p[which(interactions.p$pvalue < 0.01),]
+head(tmp)
+
+
+#calculate a network based on the number of interactions (ligand/receptors), 
+#cluster centroids and distances between these clusters
+my_matrix <- interactionmatrix(tmp)
+head(matrix)
+
+my_graph <- cellnetwork3(tmp, threshold = 5)
+
+
+cellrouter.wt <- calculateCentroids(cellrouter.wt, assay.type = "RNA", sample.name = "Sample1", 
+                                 cluster.column = "celltype", cluster.type = "Cluster")
+
+cellrouter.wt <- calculateDistanceMatrix(cellrouter.wt, assay.type = "RNA", sample.name = "Sample1", 
+                                      cluster.type = "Cluster", spot_distance = 100, normalize = FALSE)
+
+plots <- predictCellInteractions(cellrouter.wt, assay.type = "RNA", sample.name = "Sample1", 
+                                 cluster.type = "Cluster", graph = my_graph, distance.threshold = 0.75)
+options(repr.plot.width = 22, repr.plot.height = 7)
+gridExtra::grid.arrange(grobs = plots, ncol = 1)
+
