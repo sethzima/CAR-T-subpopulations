@@ -10,6 +10,7 @@ library(Seurat)
 library(patchwork)
 library(dplyr)
 library(hdf5r)
+library(doParallel)
 
 #read in the data
 set.seed(42)
@@ -98,4 +99,87 @@ cellrouter.us <- scaleData(cellrouter.us, assay.type = "RNA",
 
 
 
+#clustering
+#wild type
+cellrouter.wt <- computePCA(cellrouter.wt, assay.type = "RNA", 
+                         seed = 42, num.pcs = 50, genes.use = cellrouter.wt@var.genes) 
+plot(cellrouter.wt@pca$sdev)
 
+# cellrouter.wt <- computeTSNE(cellrouter.wt, 
+#                           seed = 1, num.pcs = 8, max_iter = 1000)
+
+cellrouter.wt <- computeUMAP(cellrouter.wt, 
+                          seed = 1, num.pcs = 8, metric = "cosine", n_neighbors = 30, spread = 1, min_dist = 0.1)
+
+cellrouter.wt <- findClusters(cellrouter.wt, assay.type = "RNA", 
+                           num.pcs = 8, nn.type = "knn", k = 20)
+
+# plotReducedDimension(cellrouter.wt, assay.type = "RNA", reduction.type = "tsne", annotation = "population", annotation.color = "colors",
+#                      dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+plotReducedDimension(cellrouter.wt, assay.type = "RNA", reduction.type = "umap", annotation = "population", annotation.color = 'colors',
+                     dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+
+
+
+#stimulated
+cellrouter.st <- computePCA(cellrouter.st, assay.type = "RNA", 
+                            seed = 42, num.pcs = 50, genes.use = cellrouter.st@var.genes) 
+plot(cellrouter.st@pca$sdev)
+
+# cellrouter.wt <- computeTSNE(cellrouter.wt, 
+#                           seed = 1, num.pcs = 8, max_iter = 1000)
+
+cellrouter.st <- computeUMAP(cellrouter.st, 
+                             seed = 1, num.pcs = 8, metric = "cosine", n_neighbors = 30, spread = 1, min_dist = 0.1)
+
+cellrouter.st <- findClusters(cellrouter.st, assay.type = "RNA", 
+                              num.pcs = 8, nn.type = "knn", k = 20)
+
+# plotReducedDimension(cellrouter.wt, assay.type = "RNA", reduction.type = "tsne", annotation = "population", annotation.color = "colors",
+#                      dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+plotReducedDimension(cellrouter.st, assay.type = "RNA", reduction.type = "umap", annotation = "population", annotation.color = 'colors',
+                     dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+#unstimulated
+cellrouter.us <- computePCA(cellrouter.us, assay.type = "RNA", 
+                            seed = 42, num.pcs = 50, genes.use = cellrouter.us@var.genes) 
+plot(cellrouter.us@pca$sdev)
+
+# cellrouter.wt <- computeTSNE(cellrouter.wt, 
+#                           seed = 1, num.pcs = 8, max_iter = 1000)
+
+cellrouter.us <- computeUMAP(cellrouter.us, 
+                             seed = 1, num.pcs = 8, metric = "cosine", n_neighbors = 30, spread = 1, min_dist = 0.1)
+
+cellrouter.us <- findClusters(cellrouter.us, assay.type = "RNA", 
+                              num.pcs = 8, nn.type = "knn", k = 20)
+
+# plotReducedDimension(cellrouter.wt, assay.type = "RNA", reduction.type = "tsne", annotation = "population", annotation.color = "colors",
+#                      dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+plotReducedDimension(cellrouter.us, assay.type = "RNA", reduction.type = "umap", annotation = "population", annotation.color = 'colors',
+                     dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+#cluster-specific gene signatures and marker genes
+#wt clustering
+markers.wt <- findSignatures(cellrouter.wt, assay.type = "RNA", column = "population", pos.only = TRUE, 
+                             fc.threshold = 0.2, nCores = 10)
+
+markers.st <- findSignatures(cellrouter.st, assay.type = "RNA", column = "population", pos.only = TRUE, 
+                             fc.threshold = 0.2, nCores = 10)
+  
+markers.us <- findSignatures(cellrouter.us, assay.type = "RNA", column = "population", pos.only = TRUE, 
+                             fc.threshold = 0.2, nCores = 10)
+
+write.csv(markers.wt, file="wt_clusters_fusca.csv", row.names=F)
+write.csv(markers.st, file="st_clusters_fusca.csv", row.names=F)
+write.csv(markers.us, file="us_clusters_fusca.csv", row.names=F)
