@@ -180,6 +180,13 @@ markers.st <- findSignatures(cellrouter.st, assay.type = "RNA", column = "popula
 markers.us <- findSignatures(cellrouter.us, assay.type = "RNA", column = "population", pos.only = TRUE, 
                              fc.threshold = 0.2, nCores = 10)
 
+
+markers.wt.down <-  findSignatures(cellrouter.wt, assay.type = "RNA", column = "population", pos.only = FALSE, 
+                                   fc.threshold = 0.2, nCores = 10)
+
+
+
+
 write.csv(markers.wt, file="wt_clusters_fusca.csv", row.names=F)
 write.csv(markers.st, file="st_clusters_fusca.csv", row.names=F)
 write.csv(markers.us, file="us_clusters_fusca.csv", row.names=F)
