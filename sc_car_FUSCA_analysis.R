@@ -188,7 +188,7 @@ write.csv(markers.us, file="us_clusters_fusca.csv", row.names=F)
 
 #cluster annotations
 #WT
-tmp <- recode(as.character(cellrouter.wt@assays$RNA@sampTab$population), 
+tmp.wt <- recode(as.character(cellrouter.wt@assays$RNA@sampTab$population), 
               "1"="CD4+ T cell", 
               "2"="CD4+ T cell",
               "3"="Dendritic cell",
@@ -203,9 +203,9 @@ tmp <- recode(as.character(cellrouter.wt@assays$RNA@sampTab$population),
               "12"="Intermediate B cells",
               "13"="CD56+ NK cells"
               )
-names(tmp) <- rownames(cellrouter.wt@assays$RNA@sampTab)
+names(tmp.wt) <- rownames(cellrouter.wt@assays$RNA@sampTab)
 
-df <- data.frame(cluster = cellrouter.wt@assays$RNA@sampTab$population, celltype = tmp)
+df <- data.frame(cluster = cellrouter.wt@assays$RNA@sampTab$population, celltype = tmp.wt)
 rownames(df) <- rownames(cellrouter.wt@assays$RNA@sampTab)
 
 cellrouter.wt <- addInfo(cellrouter.wt, assay.type = "RNA", sample.name = sample_names[[1]],
@@ -254,8 +254,8 @@ p <- clusterPermutation(cellrouter.wt, assay.type = "RNA",
 
 interactions.p <- calculatePvalue(p, nPerm = 1000, interactions2 = interactions)
 
-tmp <- interactions.p[which(interactions.p$pvalue < 0.01),]
-head(tmp)
+tmp.wt <- interactions.p[which(interactions.p$pvalue < 0.01),]
+head(tmp.wt)
 
 
 #calculate a network based on the number of interactions (ligand/receptors), 
