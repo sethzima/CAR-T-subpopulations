@@ -54,6 +54,13 @@ cellrouter.st <- CreateCellRouter(st.data, assay.type = "RNA", min.genes = 200, 
 cellrouter.us <- CreateCellRouter(us.data, assay.type = "RNA", min.genes = 200, min.cells = 3, is.expr = 0)
 
 
+
+
+
+
+
+
+
 #preprocessing
 var.genes.wt <- FindVariableGenes(cellrouter.wt, assay.type = "RNA", 
                                method = "coefficient_variation", pvalue = 0.05)
@@ -65,8 +72,6 @@ cellrouter.wt <- Normalize(cellrouter.wt, assay.type = "RNA")
 
 cellrouter.wt <- scaleData(cellrouter.wt, assay.type = "RNA", 
                         genes.use = cellrouter.wt@var.genes, blocksize = nrow(cellrouter.wt@assays$RNA@ndata))
-
-
 
 
 
@@ -167,11 +172,6 @@ cellrouter.us <- findClusters(cellrouter.us, assay.type = "RNA",
 
 plotReducedDimension(cellrouter.us, assay.type = "RNA", reduction.type = "umap", annotation = "population", annotation.color = 'colors',
                      dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
-
-
-markers.wt.all <- FindAllMarkers(cellrouter.wt, assay = "RNA")
-markers.st.all <- FindAllMarkers(cellrouter.st, assay = "RNA")
-markers.us.all <- FindAllMarkers(cellrouter.us, assay = "RNA")
 
 
 
