@@ -56,9 +56,9 @@ WT.combined[["percent.mt"]] <- PercentageFeatureSet(WT.combined, pattern = "^MT-
 St.combined[["percent.mt"]] <- PercentageFeatureSet(St.combined, pattern = "^MT-")
 Us.combined[["percent.mt"]] <- PercentageFeatureSet(Us.combined, pattern = "^MT-")
 
-VlnPlot(WT.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-VlnPlot(St.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-VlnPlot(Us.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# VlnPlot(WT.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# VlnPlot(St.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# VlnPlot(Us.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
 #QC metrics
 #at least 400 genes for leuka, 1000 for product

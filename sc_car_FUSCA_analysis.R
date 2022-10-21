@@ -1,4 +1,4 @@
-install.packages("devtools")
+#install.packages("devtools")
 library(devtools)
 devtools::install_github("edroaldo/fusca")
 library(dplyr)
@@ -167,6 +167,12 @@ cellrouter.us <- findClusters(cellrouter.us, assay.type = "RNA",
 
 plotReducedDimension(cellrouter.us, assay.type = "RNA", reduction.type = "umap", annotation = "population", annotation.color = 'colors',
                      dotsize = 1.5, showlabels = TRUE, labelsize = 5, convex = FALSE)
+
+
+markers.wt.all <- FindAllMarkers(cellrouter.wt, assay = "RNA")
+markers.st.all <- FindAllMarkers(cellrouter.st, assay = "RNA")
+markers.us.all <- FindAllMarkers(cellrouter.us, assay = "RNA")
+
 
 
 #cluster-specific gene signatures and marker genes
