@@ -157,3 +157,38 @@ names(wt.cluster.ids) <- levels(WT.combined)
 WT.combined <- RenameIdents(WT.combined, wt.cluster.ids)
 
 DimPlot(WT.combined, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
+
+
+
+
+
+
+
+#working on the stimulated populations
+Us.combined <- RunUMAP(Us.combined, dims = 1:50)
+DimPlot(Us.combined, reduction = "umap", label = TRUE)
+
+#marker genes from supplemental info
+features.us <- c("FTL", "S100A8", "CD14", "GNLY", "NKG7", "CD19", "CD79A", "CD3D", "CD8A", "CD4")
+
+my.features.us <- c("CD14", "LYZ", "MS4A7", "CST3", "ACSL1", "AGTRAP", "AIF1", "FCN1", "GNS")
+
+b.features.us <- c("MS4A1", "CD79A", "CD19", "CD22", "CD27","CD37", "CR2", "CD180", "BTLA")
+
+lymph.features.us <- c("IL7R", "CCR7", "S100A4", "CD8A", "CD4", "GNLY", "NKG7", "CD48", "CD96")
+
+
+t.features.us <- c("CD2", "CD3D", "CD3E", "CD3G", "CD48", "CD8A", "IL7R", "IL16", "IL23A")
+
+
+t.subtype.us <- c("CD4", "CD8A", "FOXP3", "CCR7", "SLAMF6", "IFNGR1", "PDCD1", "CTLA4", "XCL1", "GZMB", "CX3CR1", "TOX")
+
+
+
+#visulatizations
+FeaturePlot(Us.combined, features = features.us)
+
+FeaturePlot(Us.combined, features = b.features.us)
+
+FeaturePlot(Us.combined, features = t.features.us)
+FeaturePlot(Us.combined, features = t.subtype.us)
