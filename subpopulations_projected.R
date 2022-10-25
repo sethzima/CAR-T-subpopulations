@@ -1,7 +1,6 @@
 #install.packages("devtools")
 library(devtools)
 #devtools::install_github("edroaldo/fusca")
-library(dplyr)
 #library(fusca)
 library(igraph)
 library(scales)
@@ -23,6 +22,16 @@ remotes::install_github("carmonalab/scGate")
 remotes::install_github("carmonalab/ProjecTILs")
 
 library(ProjecTILs)
+
+#looking at reference data
+ref <- load.reference.map()
+refCols <- c("#edbe2a", "#A58AFF", "#53B400", "#F8766D", "#00B6EB", "#d1cfcc", "#FF0000",
+             "#87f6a5", "#e812dd")
+DimPlot(ref, label = T, cols = refCols)
+
+markers <- c("Cd4", "Cd8a", "Ccr7", "Tcf7", "Pdcd1", "Havcr2", "Tox", "Izumo1r",
+             "Cxcr6", "Xcl1", "Gzmb", "Gzmk", "Ifng", "Foxp3")
+VlnPlot(ref, features = markers, stack = T, flip = T, assay = "RNA")
 
 
 #read in the data
@@ -120,7 +129,57 @@ DimPlot(WT.combined, reduction = "umap", label = TRUE)
 DimPlot(St.combined, reduction = "umap", label = TRUE)
 DimPlot(Us.combined, reduction = "umap", label = TRUE)
 
-ref <- load.reference.map()
 
-st.query <- ProjecTILs.classifier(query = St.combined, ref = ref)
+#project the query datasets onto the reference atlas
+wt.projected <- Run.ProjecTILs(WT.combined, ref = ref, filter.cells = FALSE)
+plot.projection(ref, wt.projected)
+plot.statepred.composition(ref, wt.projected, metric = "Percent")
 
+
+st.projected <- Run.ProjecTILs(St.combined, ref = ref, filter.cells = FALSE)
+plot.projection(ref, st.projected)
+plot.statepred.composition(ref, st.projected, metric = "Percent")
+
+us.projected <- Run.ProjecTILs(Us.combined, ref = ref, filter.cells = FALSE)
+plot.projection(ref, us.projected)
+plot.statepred.composition(ref, us.projected, metric = "Percent")
+
+plot.states.radar(ref, query = wt.projected)
+plot.states.radar(ref, query = st.projected)
+plot.states.radar(ref, query = us.projected)
+
+#comparing gene programs
+remotes::install_github("carmonalab/SignatuR")
+library(SignatuR)
+
+programs <- GetSignature(SignatuR$Mm$Programs)
+names(programs)
+
+library(UCell)
+ref <- AddModuleScore_UCell(ref, features = programs, assay = "RNA", name = NULL)
+
+#wild type
+wt.projected <- AddModuleScore_UCell(wt.projected, features = programs, assay = "RNA",
+                                        name = NULL)
+plot.states.radar(ref, query = wt.projected, meta4radar = names(programs))
+
+#st
+st.projected <- AddModuleScore_UCell(st.projected, features = programs, assay = "RNA",
+                                     name = NULL)
+plot.states.radar(ref, query = st.projected, meta4radar = names(programs))
+
+#us
+us.projected <- AddModuleScore_UCell(us.projected, features = programs, assay = "RNA",
+                                     name = NULL)
+plot.states.radar(ref, query = us.projected, meta4radar = names(programs))
+
+
+
+#compare states across conditions
+query.control <- subset(us.projected)
+query.perturb <- subset(st.projected)
+
+plot.states.radar(ref, query = list(Control = query.control, Query = query.perturb))
+
+
+#
