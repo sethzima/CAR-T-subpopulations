@@ -130,6 +130,40 @@ DimPlot(St.combined, reduction = "umap", label = TRUE)
 DimPlot(Us.combined, reduction = "umap", label = TRUE)
 
 
+
+#use the reference as a cell type classifier
+#wt
+wt.query <- ProjecTILs.classifier(query = WT.combined, ref = ref)
+palette <- c("#edbe2a", "#A58AFF", "#53B400", "#F8766D", "#00B6EB", "#d1cfcc", "#FF0000",
+             "#87f6a5", "#e812dd", "#777777")
+names(palette) <- c(levels(ref$functional.cluster), "NA")
+DimPlot(wt.query, group.by = "functional.cluster", cols = palette)
+
+
+#st
+st.query <- ProjecTILs.classifier(query = St.combined, ref = ref)
+palette <- c("#edbe2a", "#A58AFF", "#53B400", "#F8766D", "#00B6EB", "#d1cfcc", "#FF0000",
+             "#87f6a5", "#e812dd", "#777777")
+names(palette) <- c(levels(ref$functional.cluster), "NA")
+DimPlot(st.query, group.by = "functional.cluster", cols = palette)
+
+
+
+#us
+us.query <- ProjecTILs.classifier(query = Us.combined, ref = ref)
+palette <- c("#edbe2a", "#A58AFF", "#53B400", "#F8766D", "#00B6EB", "#d1cfcc", "#FF0000",
+             "#87f6a5", "#e812dd", "#777777")
+names(palette) <- c(levels(ref$functional.cluster), "NA")
+DimPlot(us.query, group.by = "functional.cluster", cols = palette)
+
+
+
+
+
+
+
+
+
 #project the query datasets onto the reference atlas
 wt.projected <- Run.ProjecTILs(WT.combined, ref = ref, filter.cells = FALSE)
 plot.projection(ref, wt.projected)
@@ -181,5 +215,3 @@ query.perturb <- subset(st.projected)
 
 plot.states.radar(ref, query = list(Control = query.control, Query = query.perturb))
 
-
-#
